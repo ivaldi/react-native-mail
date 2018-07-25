@@ -140,6 +140,13 @@ static NSString *RCTKeyForInstance(id instance)
     return [NSString stringWithFormat:@"%p", instance];
 }
 
+typedef struct StructFileExtensionMimePair_t
+{
+  const char* const fileExtension;
+  const char* const mimeType;
+
+} StructFileExtensionMimePair_t;
+
 // Consider a data lookup table that has analogy in Java and Objective C
 // so mime type data is maintained in single location.
 static const StructFileExtensionMimePair_t lookupMimeTypeByFileExtension[] = {
