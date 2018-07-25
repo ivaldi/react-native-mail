@@ -2,6 +2,7 @@
 #import "RNMail.h"
 #import <React/RCTConvert.h>
 #import <React/RCTLog.h>
+#import <AssetsLibrary/AssetsLibrary.h>
 
 @implementation RNMail
 {
@@ -82,7 +83,39 @@ RCT_EXPORT_METHOD(mail:(NSDictionary *)options
 
             // Read file data to add to mime attachment
             NSData *fileData = [NSData dataWithContentsOfFile:attachmentPath];
-            [mail addAttachmentData:fileData mimeType:mimeType fileName:attachmentName];
+            if ([attachmentPath hasPrefix:@"file://"]) {
+                // Create a URL from the string
+                NSURL *attachmentURL = [[NSURLComponents componentsWithString:attachmentPath] URL];
+
+                // Get the resource path and read the file using NSData
+                NSError *error = nil;
+                fileData = [NSData dataWithContentsOfURL:attachmentURL options:0 error:&error];
+
+                if(fileData == nil) {
+                    callback(@[@"bad_path"]);
+                }
+                [mail addAttachmentData:fileData mimeType:mimeType fileName:attachmentName];
+            }
+            
+
+            if ([attachmentPath hasPrefix:@"assets-library://"]) {
+                ALAssetsLibrary *assetLibrary=[[ALAssetsLibrary alloc] init];
+                [assetLibrary assetForURL:[NSURL URLWithString:[attachmentPath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]] resultBlock:^(ALAsset *asset)
+            {
+                ALAssetRepresentation *rep = [asset defaultRepresentation];
+                Byte *buffer = (Byte*)malloc(rep.size);
+                NSUInteger buffered = [rep getBytes:buffer fromOffset:0.0 length:rep.size error:nil];
+                NSData *data = [NSData dataWithBytesNoCopy:buffer length:buffered freeWhenDone:YES];//this is NSData may be what you want
+                [mail addAttachmentData:data mimeType:mimeType fileName:attachmentName];
+
+            } 
+            failureBlock:^(NSError *err) {
+                NSLog(@"Error: %@",[err localizedDescription]);
+            }];
+               
+            };
+
+            
         }
 
         }
