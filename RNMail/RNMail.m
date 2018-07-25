@@ -95,24 +95,23 @@ RCT_EXPORT_METHOD(mail:(NSDictionary *)options
                     callback(@[@"bad_path"]);
                 }
                 [mail addAttachmentData:fileData mimeType:mimeType fileName:attachmentName];
-            }
-            
-
-            if ([attachmentPath hasPrefix:@"assets-library://"]) {
+            }else if ([attachmentPath hasPrefix:@"assets-library://"]) {
                 ALAssetsLibrary *assetLibrary=[[ALAssetsLibrary alloc] init];
                 [assetLibrary assetForURL:[NSURL URLWithString:[attachmentPath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]] resultBlock:^(ALAsset *asset)
-            {
-                ALAssetRepresentation *rep = [asset defaultRepresentation];
-                Byte *buffer = (Byte*)malloc(rep.size);
-                NSUInteger buffered = [rep getBytes:buffer fromOffset:0.0 length:rep.size error:nil];
-                NSData *data = [NSData dataWithBytesNoCopy:buffer length:buffered freeWhenDone:YES];//this is NSData may be what you want
-                [mail addAttachmentData:data mimeType:mimeType fileName:attachmentName];
+                {
+                    ALAssetRepresentation *rep = [asset defaultRepresentation];
+                    Byte *buffer = (Byte*)malloc(rep.size);
+                    NSUInteger buffered = [rep getBytes:buffer fromOffset:0.0 length:rep.size error:nil];
+                    NSData *data = [NSData dataWithBytesNoCopy:buffer length:buffered freeWhenDone:YES];//this is NSData may be what you want
+                    [mail addAttachmentData:data mimeType:mimeType fileName:attachmentName];
 
-            } 
-            failureBlock:^(NSError *err) {
-                NSLog(@"Error: %@",[err localizedDescription]);
-            }];
+                }
+                failureBlock:^(NSError *err) {
+                    NSLog(@"Error: %@",[err localizedDescription]);
+                }];
                
+            }else{
+                [mail addAttachmentData:fileData mimeType:mimeType fileName:attachmentName];
             };
 
             
